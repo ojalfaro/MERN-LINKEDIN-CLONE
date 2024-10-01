@@ -43,7 +43,7 @@ export const sendConnectionRequest = async(req,res) => {
 
 export const acceptConnectionRequest = async(req,res) => {
     try {
-        console.log("entro a acceptConnectionRequest ")
+        //console.log("entro a acceptConnectionRequest ")
 		const { requestId } = req.params;
 		const userId = req.user._id;
 
@@ -152,7 +152,7 @@ export const getUserConnectionRequest = async(req,res) => {
         const userId = req.user._id
 
         const user = await User.findById(userId).populate(
-            "connnections",
+            "connections",
             "name username profilePicture headline connnections"
         )
 
