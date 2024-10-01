@@ -9,7 +9,7 @@ router.post("/request/:userId",protectRoute,sendConnectionRequest)
 router.put("/accept/:userId",protectRoute,acceptConnectionRequest)
 router.put("/reject/:userId",protectRoute,rejectConnectionRequest)
 //get all connection request for the current user
-router.get("/request",protectRoute,getConnectionRequest)
+router.get("/requests",protectRoute,getConnectionRequest)
 //get all connection for the user
 router.get("/",protectRoute,getUserConnectionRequest)
 router.delete("/userId",protectRoute,removeConnection)

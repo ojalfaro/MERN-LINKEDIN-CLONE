@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react'
+import Layout from  './components/layout/Layout'
+import SignUpPage from './pages/auth/SignUpPage'
+import LoginPage from './pages/auth/LoginPage'
+import HomePage from './pages/HomePage'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import { useQuery } from '@tanstack/react-query'
+import { axiosInstance } from './lib/axio'
+import { toast} from 'react-hot-toast'
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
 
+  const {data: authUser,isLoading} = useQuery({
+    queryKey: ['authUser'],
+    queryFn: async() => {
+      try {
+        const res = await axiosInstance.get("/auth/me")
+        return res.data
+      } catch (err) {
+        if(err.response && err.response.status === 401){
+          return null
+          
+        }
+        toast.error(err.response.data.message || "Something went wrong")
+      }
+    }
+  })
+  if(isLoading) return null
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Layout>
+      
+      <Routes>
+        <Route path='/' element={authUser ? <HomePage /> : <Navigate to={"/login"}/>} />
+        <Route path='/signup' element={!authUser ? <SignUpPage />: <Navigate to={"/"}/> } />
+        <Route path='/login' element={!authUser ? <LoginPage />: <Navigate to={"/"}/>} />
+
+      </Routes>
+      <Toaster /> 
+
+    </Layout>
   )
 }
 

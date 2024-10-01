@@ -2,21 +2,19 @@ import Notification from "../models/notification.model.js"
 
 export const getUserNotications = async(req,res) => {
    
-    try{
-        const notifications = Notification.find({recipient:req.user._id }).short({createdAt:-1})
-        .populate("relatedUser","name username profilePicture")
-        .populate("reltedPost","content image")
-        
+    try {
+		const notifications = await Notification.find({ recipient: req.user._id })
+			.sort({ createdAt: -1 })
+			.populate("relatedUser", "name username profilePicture")
+			.populate("relatedPost", "content image");
 
-        res.status(200).json(notifications)
-    }
-    catch(error){
-        console.error("Error in getFeedPost controller: ",error.message)
-        res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        })
-    }
+		res.status(200).json(notifications);
+	} catch (error) {
+		console.error("Error in getUserNotifications controller:", error);
+		res.status(500).json({ message: "Internal server error" });
+	}
+    
+   
 }
 
 export const markNoticationAsRead = async(req,res) => {
@@ -32,7 +30,7 @@ export const markNoticationAsRead = async(req,res) => {
         res.status(200).json(notification)
     }
     catch(error){
-        console.error("Error in getFeedPost controller: ",error.message)
+        console.error("Error in markNoticationAsRead controller: ",error.message)
         res.status(500).json({
             success:false,
             message:"Internal server error"
@@ -51,7 +49,7 @@ export const deleteNotication = async(req,res) => {
         res.status(200).json({message:"Notification deleted successfully"})
     }
     catch(error){
-        console.error("Error in getFeedPost controller: ",error.message)
+        console.error("Error in deleteNotication controller: ",error.message)
         res.status(500).json({
             success:false,
             message:"Internal server error"
