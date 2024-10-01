@@ -7,10 +7,10 @@ import {sendCommentNotificationEmail} from '../emails/emailHandlers.js'
 export const getFeedPost = async(req,res) => {
 
     try{
-        const posts = await Post.find({author:{$in: req.user.connections}})
-        .populate("auhtor","name username profilePicture headline")
+        const posts = await Post.find({author:{$in: [...req.user.connections,req.user._id]}})
+        .populate("author","name username profilePicture headline")
         .populate("comments.user","name profilePicture")
-        .short({createdAt:-1})
+        .sort({createdAt:-1})
 
         res.status(200).json(posts)
     }
@@ -23,41 +23,36 @@ export const getFeedPost = async(req,res) => {
     }
 }
 
-export const cretePost = async(req,res) => {
+export const createPost = async(req,res) => {
 
-    try{
-        const {content,image} = req.body
+    try {
+		const { content, image } = req.body;
+		let newPost;
 
-        let newPost
+        console.log("content",content)
+        console.log("image",image)
 
-        if(image){
-            const imgResult = await cloudinary.uploader.upload(image)
-            newPost = new Post({
-                author: req.user._id,
-                content,
-                image:imgResult.secure_url
-            })
-        }else{
-            newPost = new Post({
-                author: req.user._id,
-                content
-            })
-        }
+		if (image) {
+			const imgResult = await cloudinary.uploader.upload(image);
+			newPost = new Post({
+				author: req.user._id,
+				content,
+				image: imgResult.secure_url,
+			});
+		} else {
+			newPost = new Post({
+				author: req.user._id,
+				content,
+			});
+		}
 
-        await newPost.save()
+		await newPost.save();
 
-        res.status(201).json({
-            success:true,
-            message:newPost
-        })
-    }
-    catch(error){
-        console.error("Error in getFeedPost controller: ",error.message)
-        res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        })
-    }
+		res.status(201).json(newPost);
+	} catch (error) {
+		console.error("Error in createPost controller:", error);
+		res.status(500).json({ message: "Server error" });
+	}
 }
 
 export const deletePost = async(req,res) => {
@@ -111,7 +106,7 @@ export const getPostById = async(req,res) => {
         const post = await Post.findById(postId)
         .populate("auhtor","name username profilePicture headline")
         .populate("comments.user","name profilePicture")
-        .short({createdAt:-1})
+        .sort({createdAt:-1})
        
     
         res.status(200).json(post)
@@ -127,49 +122,48 @@ export const getPostById = async(req,res) => {
 }
 
 export const createComment = async(req,res) => {
-    try{
-        const postId = req.params.id
-        const { content } = req.body
+    try {
+		const postId = req.params.id;
+		const { content } = req.body;
 
+		const post = await Post.findByIdAndUpdate(
+			postId,
+			{
+				$push: { comments: { user: req.user._id, content } },
+			},
+			{ new: true }
+		).populate("author", "name email username headline profilePicture");
 
-        const post = await Post.findByIdAndUpdate({
-            $push: {cooments: {user: req.user._id,content}},
-        },{new: true}).populate("auhtor","name email username profilePicture headline")
+		// create a notification if the comment owner is not the post owner
+		if (post.author._id.toString() !== req.user._id.toString()) {
+			const newNotification = new Notification({
+				recipient: post.author,
+				type: "comment",
+				relatedUser: req.user._id,
+				relatedPost: postId,
+			});
 
-        //create a notification if the comment owner is not the post owner
-        if(post.author.toString() !== req.user._id.toString()){
-            const newNotification = new Notification({
-                recipient:post.author,
-                type:"comment",
-                relatedUser:req.user._id,
-                relatedPost:postId
-            })
-            await newNotification.save()
-            //todo send email
-            try {
-                const postUrl = process.env.CLIENT_URL + "/post/"+postId
-                await sendCommentNotificationEmail(post.author.email,post.author.name,req.user.name,postUrl,content)
-            } catch (error) {
-                console.error("Error in sendCommentNotificationEmail funtion: ",error.message)
-                res.status(500).json({
-                    success:false,
-                    message:"Internal server error"
-                })
-            }
-        }
+			await newNotification.save();
 
-       
+			try {
+				const postUrl = process.env.CLIENT_URL + "/post/" + postId;
+				await sendCommentNotificationEmail(
+					post.author.email,
+					post.author.name,
+					req.user.name,
+					postUrl,
+					content
+				);
+			} catch (error) {
+				console.log("Error in sending comment notification email:", error);
+			}
+		}
 
-
-        res.status(200).json(post)
-    }
-    catch(error){
-        console.error("Error in getFeedPost controller: ",error.message)
-        res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        })
-    }
+		res.status(200).json(post);
+	} catch (error) {
+		console.error("Error in createComment controller:", error);
+		res.status(500).json({ message: "Server error" });
+	}
 }
 
 

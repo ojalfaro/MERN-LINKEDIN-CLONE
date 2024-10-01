@@ -2,26 +2,24 @@ import User from "../models/user.model.js"
 import cloudinary from "../utils/cloudinary.js"
 
 export const getSuggestionConnections = async (req,res) => {
-    const {userid} = req.user._id
-    try{
-        const currentUser = await User.findById(userid).select("connections")
-        //find users who are not already connected, and also do not recomended our own profile! right?
-        const suggestionsUser = await User.find({
-            _id:{
-                $ne: userid,$nin: currentUser.connections
-            }
-        }).select("name username profilePicture,headline")
-        .limit(3)
+    try {
+		const currentUser = await User.findById(req.user._id).select("connections");
 
-        res.json(suggestionsUser)
-    }
-    catch(error){
-        console.error("Error in suggestionsUser controller: ",error.message)
-        res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        })
-    }
+		// find users who are not already connected, and also do not recommend our own profile!! right?
+		const suggestedUser = await User.find({
+			_id: {
+				$ne: req.user._id,
+				$nin: currentUser.connections,
+			},
+		})
+			.select("name username profilePicture headline")
+			.limit(3);
+
+		res.json(suggestedUser);
+	} catch (error) {
+		console.error("Error in getSuggestionConnections controller:", error);
+		res.status(500).json({ message: "Server error" });
+	}
 }
 
 export const getPublicProfile = async (req,res) => {

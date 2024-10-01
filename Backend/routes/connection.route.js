@@ -6,14 +6,14 @@ import { sendConnectionRequest,acceptConnectionRequest,rejectConnectionRequest,g
 const router = Router()
 
 router.post("/request/:userId",protectRoute,sendConnectionRequest)
-router.put("/accept/:userId",protectRoute,acceptConnectionRequest)
-router.put("/reject/:userId",protectRoute,rejectConnectionRequest)
+router.put("/accept/:requestId",protectRoute,acceptConnectionRequest)
+router.put("/reject/:requestId",protectRoute,rejectConnectionRequest)
 //get all connection request for the current user
 router.get("/requests",protectRoute,getConnectionRequest)
 //get all connection for the user
 router.get("/",protectRoute,getUserConnectionRequest)
-router.delete("/userId",protectRoute,removeConnection)
-router.get("/status/userId",protectRoute,getConnectionStatus)
+router.delete("/:userId",protectRoute,removeConnection)
+router.get("/status/:userId",protectRoute,getConnectionStatus)
 
 
 
