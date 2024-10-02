@@ -23,22 +23,18 @@ export const getSuggestionConnections = async (req,res) => {
 }
 
 export const getPublicProfile = async (req,res) => {
-    const {username} = req.params.username
-    try{
-        const user = await User.findOne({username:username}).select("-password")
+    try {
+		const user = await User.findOne({ username: req.params.username }).select("-password");
 
-        if(!user){
-            return res.status(404).json({message: "User not found"})
-        }
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
 
-        res.json(user)
-    }catch(error){
-        console.error("Error in getPublicProfile controller: ",error.message)
-        res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        })
-    }
+		res.json(user);
+	} catch (error) {
+		console.error("Error in getPublicProfile controller:", error);
+		res.status(500).json({ message: "Server error" });
+	}
 }
 
 
@@ -48,7 +44,7 @@ export const updateProfile = async (req,res) => {
         const allowedFields = [
             "name",
             "username",
-            "headline",
+            "headLine",
             "about",
             "location",
             "profilePicture",

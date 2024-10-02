@@ -104,7 +104,7 @@ export const getPostById = async(req,res) => {
        
 
         const post = await Post.findById(postId)
-        .populate("auhtor","name username profilePicture headline")
+        .populate("author","name username profilePicture headline")
         .populate("comments.user","name profilePicture")
         .sort({createdAt:-1})
        
